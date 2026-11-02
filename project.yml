@@ -1,0 +1,47 @@
+name: Offload
+options:
+  bundleIdPrefix: dev.offload
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: '18.0'
+    SWIFT_VERSION: '5.0'
+    TARGETED_DEVICE_FAMILY: '1'
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+targets:
+  Offload:
+    type: application
+    platform: iOS
+    sources: [Offload]
+    info:
+      path: Offload/Info.plist
+      properties:
+        CFBundleIcons:
+          CFBundlePrimaryIcon:
+            CFBundleIconFiles: [AppIcon60]
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [offload-test]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.offload.app
+        INFOPLIST_KEY_CFBundleDisplayName: Offload
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Review photos and copy all original resources to your selected external drive.
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Create disposable sample photos in simulator tests.
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+  OffloadUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [OffloadUITests]
+    dependencies:
+      - target: Offload
+schemes:
+  Offload:
+    build:
+      targets:
+        Offload: all
+    test:
+      targets: [OffloadUITests]

@@ -1,0 +1,13 @@
+build/
+DerivedData/
+.build/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+*.xcresult/
+*.ipa
+*.mobileprovision
+*.p12
+Signing.xcconfig
+.env
+.env.*
