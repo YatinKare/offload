@@ -19,9 +19,19 @@ struct Receipt: Codable, Identifiable {
     let date: Date
     var bytes: Int64 { resources.reduce(0) { $0 + $1.bytes } }
 }
-enum ArchiveFailure: LocalizedError {
+enum ArchiveFailure: LocalizedError, Equatable {
     case message(String)
-    var errorDescription: String? { if case let .message(s) = self { return s }; return nil }
+    case photoChanged
+    case photoUnavailable
+    case changedDuringCheck
+    var errorDescription: String? {
+        switch self {
+        case .message(let text): return text
+        case .photoChanged: return "This photo differs from the saved copy. Archive it again, or keep it on your phone."
+        case .photoUnavailable: return "Allow access to this photo in Settings, or keep the archive only."
+        case .changedDuringCheck: return "The photo changed while checking. Try checking it again."
+        }
+    }
 }
 struct ArchiveStore {
     static func digest(_ url: URL) throws -> (String, Int64) {
@@ -78,8 +88,13 @@ struct ArchiveStore {
             isPhoneFilesystem: selected.f_fsid.val.0 == phone.f_fsid.val.0 && selected.f_fsid.val.1 == phone.f_fsid.val.1
         )
     }
-    static func export(_ asset: PHAsset, root: URL, simulation: Bool) async throws -> Receipt {
+    static func export(_ asset: PHAsset, root: URL, simulation: Bool, progress: @escaping @Sendable (ArchiveStage) -> Void = { _ in }) async throws -> Receipt {
         try validate(root, simulation: simulation)
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--slow-archive") {
+            try await Task.sleep(nanoseconds: 8_000_000_000)
+        }
+        #endif
         let resources = PHAssetResource.assetResources(for: asset)
         guard !resources.isEmpty else { throw ArchiveFailure.message("No original resources available.") }
         let id = UUID().uuidString
@@ -91,14 +106,18 @@ struct ArchiveStore {
         for (index, resource) in resources.enumerated() {
             let name = "\(index)-\(URL(fileURLWithPath: resource.originalFilename).lastPathComponent)"
             let source = temp.appendingPathComponent(name)
+            progress(.preparing)
             let options = PHAssetResourceRequestOptions(); options.isNetworkAccessAllowed = true
+            options.progressHandler = { _ in progress(.downloading) }
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 PHAssetResourceManager.default().writeData(for: resource, toFile: source, options: options) { error in
                     if let error { continuation.resume(throwing: error) } else { continuation.resume() }
                 }
             }
             try validate(root, simulation: simulation)
+            try Task.checkCancellation()
             let hash = try digest(source)
+            progress(.copying)
             try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
             // UUID folders prevent overwriting any existing archive.
             let output = destination.appendingPathComponent(name)
@@ -110,6 +129,7 @@ struct ArchiveStore {
                 } catch { copyError = error }
             }
             if let error = coordinationError ?? copyError as NSError? { throw error }
+            progress(.verifying)
             let copied = try digest(output)
             guard hash == copied, hash.1 > 0 else { throw ArchiveFailure.message("Copy verification failed. The photo stays on your phone.") }
             entries.append(ArchivedResource(file: name, name: resource.originalFilename, type: resource.type.rawValue, sha256: hash.0, bytes: hash.1))
@@ -119,13 +139,48 @@ struct ArchiveStore {
         try verify(receipt, root: root, simulation: simulation)
         return receipt
     }
+    /// Compare the current PhotoKit resources, not just their metadata timestamp.
+    static func verifyOriginal(_ receipt: Receipt) async throws -> Date? {
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--slow-check") { try await Task.sleep(nanoseconds: 8_000_000_000) }
+        #endif
+        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [receipt.assetID], options: nil).firstObject else { throw ArchiveFailure.photoUnavailable }
+        let resources = PHAssetResource.assetResources(for: asset)
+        guard resources.count == receipt.resources.count else { throw ArchiveFailure.photoChanged }
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        var actual: [String] = []
+        for (index, resource) in resources.enumerated() {
+            try Task.checkCancellation()
+            let file = temp.appendingPathComponent(String(index))
+            let options = PHAssetResourceRequestOptions(); options.isNetworkAccessAllowed = true
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                PHAssetResourceManager.default().writeData(for: resource, toFile: file, options: options) { error in
+                    if let error { continuation.resume(throwing: error) } else { continuation.resume() }
+                }
+            }
+            try Task.checkCancellation()
+            let hash = try digest(file)
+            actual.append(resourceKey(resource.originalFilename, resource.type.rawValue, hash.0, hash.1))
+        }
+        let expected = receipt.resources.map { resourceKey($0.name, $0.type, $0.sha256, $0.bytes) }
+        guard actual.sorted() == expected.sorted() else { throw ArchiveFailure.photoChanged }
+        guard let fresh = PHAsset.fetchAssets(withLocalIdentifiers: [receipt.assetID], options: nil).firstObject else { throw ArchiveFailure.photoUnavailable }
+        guard fresh.modificationDate == asset.modificationDate else { throw ArchiveFailure.changedDuringCheck }
+        return fresh.modificationDate
+    }
+    private static func resourceKey(_ name: String, _ type: Int, _ hash: String, _ bytes: Int64) -> String {
+        // Length-prefix names to avoid ambiguous delimiters; retain duplicates.
+        return "\(name.utf8.count):\(name)\(type):\(hash):\(bytes)"
+    }
     static func verify(_ receipt: Receipt, root: URL, simulation: Bool) throws {
         try validate(root, simulation: simulation)
         for entry in receipt.resources {
             let url = root.appendingPathComponent(receipt.folder).appendingPathComponent(entry.file)
             let actual = try digest(url)
             guard actual.0 == entry.sha256, actual.1 == entry.bytes else {
-                throw ArchiveFailure.message("Archive changed or is incomplete. Removal blocked.")
+                throw ArchiveFailure.message("The saved copy is missing or changed. Archive this photo again.")
             }
         }
     }

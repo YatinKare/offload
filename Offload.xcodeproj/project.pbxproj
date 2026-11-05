@@ -7,8 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06DAC4A8F9DF2649EE25ADBA /* ArchiveWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A70F119F64AFDE9CD1A4C1A /* ArchiveWorker.swift */; };
 		1D42D0DEEF97736FF63F305D /* OffloadApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D77E77264AB4C3D523C15544 /* OffloadApp.swift */; };
+		2A8863A50BA949755979A4A8 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97971691C945EDAA0053CE74 /* ArchiveView.swift */; };
 		317AC136155AA927B2B126A0 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65C23F5A6DADD3D369157C21 /* ReviewModel.swift */; };
+		55C55EFACE441A6436C64B79 /* DriveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEC7DCC7D58C1CF64707628 /* DriveView.swift */; };
+		5DB0B6AE9B005AA42E457E32 /* ArchiveItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C736A15CA44FF30D15FCD0B9 /* ArchiveItem.swift */; };
 		AC13629AA1559D42E43C438A /* AppIcon60@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 72AD799C49E8290C571F62E8 /* AppIcon60@2x.png */; };
 		B0209AFD25D2A618EC882C9A /* ArchiveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70675A3B989EA69E149B7F3C /* ArchiveStore.swift */; };
 		C06F41D7293D114249D50D4D /* AppIcon1024.png in Resources */ = {isa = PBXBuildFile; fileRef = 3FC471745F48D87F1AB52E2E /* AppIcon1024.png */; };
@@ -36,7 +40,11 @@
 		70675A3B989EA69E149B7F3C /* ArchiveStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveStore.swift; sourceTree = "<group>"; };
 		72AD799C49E8290C571F62E8 /* AppIcon60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon60@2x.png"; sourceTree = "<group>"; };
 		77A9ABD3891F905F0571682D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8A70F119F64AFDE9CD1A4C1A /* ArchiveWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveWorker.swift; sourceTree = "<group>"; };
+		97971691C945EDAA0053CE74 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		C548CC5F883CB2CACFDC8C5D /* Offload.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Offload.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C736A15CA44FF30D15FCD0B9 /* ArchiveItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveItem.swift; sourceTree = "<group>"; };
+		CEEC7DCC7D58C1CF64707628 /* DriveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriveView.swift; sourceTree = "<group>"; };
 		D3B2E2D41ACC336F5B5EF35E /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
 		D77E77264AB4C3D523C15544 /* OffloadApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffloadApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -55,7 +63,11 @@
 		48A6D044ED79E136D07807A3 /* Offload */ = {
 			isa = PBXGroup;
 			children = (
+				C736A15CA44FF30D15FCD0B9 /* ArchiveItem.swift */,
 				70675A3B989EA69E149B7F3C /* ArchiveStore.swift */,
+				97971691C945EDAA0053CE74 /* ArchiveView.swift */,
+				8A70F119F64AFDE9CD1A4C1A /* ArchiveWorker.swift */,
+				CEEC7DCC7D58C1CF64707628 /* DriveView.swift */,
 				77A9ABD3891F905F0571682D /* Info.plist */,
 				D77E77264AB4C3D523C15544 /* OffloadApp.swift */,
 				65C23F5A6DADD3D369157C21 /* ReviewModel.swift */,
@@ -188,7 +200,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DB0B6AE9B005AA42E457E32 /* ArchiveItem.swift in Sources */,
 				B0209AFD25D2A618EC882C9A /* ArchiveStore.swift in Sources */,
+				2A8863A50BA949755979A4A8 /* ArchiveView.swift in Sources */,
+				06DAC4A8F9DF2649EE25ADBA /* ArchiveWorker.swift in Sources */,
+				55C55EFACE441A6436C64B79 /* DriveView.swift in Sources */,
 				1D42D0DEEF97736FF63F305D /* OffloadApp.swift in Sources */,
 				317AC136155AA927B2B126A0 /* ReviewModel.swift in Sources */,
 				F353F798C730ECF92A89DC2A /* TutorialView.swift in Sources */,
@@ -286,6 +302,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = Offload/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Offload;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Create disposable sample photos in simulator tests.";
@@ -297,6 +314,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.offload.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -400,6 +418,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = Offload/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Offload;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Create disposable sample photos in simulator tests.";
@@ -411,6 +430,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.offload.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;

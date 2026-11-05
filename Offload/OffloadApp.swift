@@ -9,12 +9,12 @@ struct ReviewView: View {
     @StateObject private var model = ReviewModel()
     @State private var showDrive = false
     @State private var showTutorial = false
-    @State private var picker = false
+    @State private var showArchive = false
     @State private var drag: CGFloat = 0
     @State private var dragging = false
     @State private var pausedBeforeDrag = false
     @Environment(\.scenePhase) private var phase
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -33,7 +33,7 @@ struct ReviewView: View {
                     drag = 0; dragging = false
                     let wasPaused = pausedBeforeDrag
                     if value.translation.width < -80 {
-                        Task { await model.archive(); model.paused = wasPaused }
+                        model.archive(); model.paused = wasPaused
                     } else {
                         if value.translation.width > 80 { model.keep() }
                         model.paused = wasPaused
@@ -84,27 +84,26 @@ struct ReviewView: View {
                 HStack {
                     if !model.history.isEmpty { icon("arrow.uturn.backward", label: "Undo", id: "undo") { model.undo() } }
                     Spacer()
-                    if !model.receipts.isEmpty {
-                        Button { model.paused = true; model.showRemoval = true } label: {
-                            HStack(spacing: 7) { Image(systemName: "checkmark.circle"); Text("\(model.receipts.count)").monospacedDigit() }.padding(13).background(.ultraThinMaterial, in: Capsule())
-                        }.foregroundStyle(.white).accessibilityLabel("Review removal, \(model.receipts.count) archived").accessibilityIdentifier("reviewRemoval").disabled(model.busy)
+                    if !model.items.isEmpty {
+                        Button { showArchive = true } label: {
+                            HStack(spacing: 7) {
+                                if model.pendingCount > 0 { ProgressView().tint(.white) }
+                                else { Image(systemName: model.problemCount > 0 ? "exclamationmark.circle" : "tray") }
+                                Text("\(model.items.count)").monospacedDigit()
+                            }.padding(13).background(.ultraThinMaterial, in: Capsule())
+                        }.foregroundStyle(.white).accessibilityLabel("Archive, \(model.items.count) items, \(model.pendingCount) waiting").accessibilityIdentifier("reviewRemoval").disabled(model.busy)
                     }
                 }
             }.padding(.horizontal, 22).padding(.vertical, 10)
             if model.busy { ProgressView().tint(.white).padding(20).background(.ultraThinMaterial, in: Circle()) }
         }
         .accessibilityElement(children: .contain).accessibilityIdentifier("reviewState")
-        .accessibilityValue("\(model.receipts.count) archived. \(model.kept) kept.")
-        .sheet(isPresented: $showDrive) { driveSheet }
+        .accessibilityValue("\(model.receipts.count) archived. \(model.kept) kept. \(model.pendingCount) pending. \(model.problemCount) need attention.")
+        .sheet(isPresented: $showDrive) { DriveView(model: model) }
+        .sheet(isPresented: $showArchive) { ArchiveView(model: model) }
         .fullScreenCover(isPresented: $showTutorial) { TutorialView { showTutorial = false } }
         .alert("Couldn't finish", isPresented: Binding(get: { model.error != nil && !showDrive }, set: { if !$0 { model.error = nil } })) { Button("OK") { model.error = nil } } message: { Text(model.error ?? "") }
-        .alert("Remove archived photos?", isPresented: $model.showRemoval) {
-            Button("Cancel", role: .cancel) {}
-            Button("Verify & remove", role: .destructive) { Task { await model.removeVerified() } }.accessibilityIdentifier("confirmRemoval")
-        } message: {
-            Text("Re-check \(model.receipts.count) copies on your drive, then remove the originals from Photos. iCloud deletion syncs across devices. Recently Deleted may hold them for 30 days before space is freed.")
-        }
-        .onReceive(timer) { _ in model.tick(active: phase == .active && !showDrive && !showTutorial && !model.showRemoval && model.error == nil) }
+        .onReceive(timer) { _ in model.tick(active: phase == .active && !showDrive && !showTutorial && !showArchive && model.error == nil) }
         .onOpenURL { url in
             #if targetEnvironment(simulator)
             guard model.simulation, url.scheme == "offload-test" else { return }
@@ -113,31 +112,15 @@ struct ReviewView: View {
             case "disconnect": model.disconnectTestDrive()
             case "corrupt": model.corruptTestCopy()
             case "internal": model.chooseDrive(URL.documentsDirectory)
+            case "stale-date": model.staleTestReceiptDate()
+            case "legacy-index": model.makeLegacyTestIndex()
+            case "edit": Task { await model.editTestPhoto() }
+            case "read-only": model.setTestDriveWritable(false)
+            case "writable": model.setTestDriveWritable(true)
             default: break
             }
             #endif
         }
-    }
-    private var driveSheet: some View {
-        NavigationStack {
-            Form {
-                Section("Archive drive") {
-                    Label(model.root?.lastPathComponent ?? "Not connected", systemImage: "externaldrive")
-                    Button("Choose drive") { picker = true }.disabled(model.busy)
-                }
-                if !model.receipts.isEmpty {
-                    Section {
-                        Label("\(model.receipts.count) archived", systemImage: "checkmark.shield")
-                    } footer: { Text("Originals stay in Photos until you confirm removal.") }
-                }
-            }
-            .navigationTitle("Drive").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showDrive = false } } }
-            .fileImporter(isPresented: $picker, allowedContentTypes: [.folder]) { result in
-                switch result { case .success(let url): model.chooseDrive(url); case .failure(let error): model.error = error.localizedDescription }
-            }
-            .alert("Couldn't finish", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) { Button("OK") { model.error = nil } } message: { Text(model.error ?? "") }
-        }.presentationDetents([.medium, .large])
     }
     private func icon(_ symbol: String, label: String, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) { Image(systemName: symbol).font(.system(size: 17)).frame(width: 42, height: 42).background(.ultraThinMaterial, in: Circle()) }

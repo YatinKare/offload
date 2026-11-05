@@ -13,7 +13,11 @@ Offload keeps review simple: a photo, a swipe, and a few controls. No account or
 
 Connect a USB drive, choose a folder, and open Photos to begin. A short walkthrough explains the controls on first launch; the **?** button reopens it.
 
-Archiving copies the original files and checks the copied bytes using SHA-256. A swipe never deletes a photo. The checkmark and count open a separate removal confirmation, which verifies the copies again before asking Apple Photos to remove the originals.
+A swipe records your decision and moves to the next photo immediately. Copies run one at a time in a saved queue, so downloads and drive speed do not interrupt review.
+
+The archive button opens a list with previews and waiting, copying, saved, or attention states. Open an item to **Check copy**, **Archive again**, or **Keep on phone**. Failed jobs can be retried; a disconnected drive pauses the queue until it is reconnected. Keep Offload open while copying. If the app closes, waiting work is retained and resumes after you select the drive again.
+
+A swipe never deletes a photo. **Verify & remove** reads the saved copies and compares them with the current originals before offering removal. A changed metadata timestamp triggers a check rather than permanent rejection. Photos whose contents differ stay in the archive list for recovery; other verified photos can still be removed.
 
 ## Requirements
 
@@ -48,11 +52,11 @@ Run the `Offload` test scheme in Xcode, or use:
 ./scripts/test-e2e.sh SIMULATOR_UUID
 ```
 
-The UI tests cover review gestures, undo, the timer, onboarding, archive verification, unavailable destinations, corrupted copies, and confirmed removal. They use generated sample images and a simulator-only destination.
+The UI tests cover slow-copy responsiveness, queue persistence, retry and undo, onboarding, legacy receipt migration, metadata-only changes, edited originals, corrupted copies, cancellation, and confirmed removal. They use generated sample images and a simulator-only destination.
 
 ## Storage and privacy
 
-Photo processing runs on the device. Archives are written to `Offload/<archive ID>/` on the selected drive, alongside a receipt describing the original resources and their hashes. Live Photo components and other resources supplied by PhotoKit are preserved. An app-local receipt index tracks archives awaiting removal.
+Photo processing runs on the device. Archives are written to `Offload/<archive ID>/` on the selected drive, alongside a receipt describing the original resources and their hashes. Live Photo components and other resources supplied by PhotoKit are preserved. An app-local journal retains queue decisions and verified receipts. Existing receipt indexes are migrated automatically. Undo or Keep may leave an already-written drive copy in place; neither action deletes originals or archive files.
 
 **Deleting from iCloud Photos also deletes from other synced devices.** Recently Deleted can retain photos for 30 days, so removing them may not immediately free space. Offload does not empty Recently Deleted.
 

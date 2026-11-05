@@ -25,9 +25,9 @@ struct TutorialView: View {
     private let ink = Color(red: 0.12, green: 0.22, blue: 0.21)
     private let steps: [(icon: String, title: String, body: String, tip: String)] = [
         ("externaldrive.badge.plus", "Connect your drive.", "Plug your USB drive into your iPhone. In the app, tap the drive icon and choose a folder on it.", "No drive? You can still review and keep photos. Archiving stays locked."),
-        ("arrow.left", "Left to archive.", "Copies the originals to your drive and verifies them.", "A swipe never deletes a photo. It stays on your phone until you confirm removal later."),
+        ("arrow.left", "Left to archive.", "Adds a copy to your queue. Keep swiping while the originals are copied and verified.", "A swipe never deletes a photo. It stays on your phone until you confirm removal later."),
         ("arrow.right", "Right to keep.", "Keeps the photo on your phone. After five seconds without a swipe, it stays.", "Tap the ring to pause. The curved arrow undoes your last choice."),
-        ("checkmark.shield", "Remove when ready.", "Tap the checkmark and count to re-check your archived copies and confirm removal.", "With iCloud Photos, deletion syncs across devices. Recently Deleted may still hold the space for 30 days.")
+        ("checkmark.shield", "Remove when ready.", "Tap the archive button to see each photo, check its copy, or archive it again before removing originals.", "With iCloud Photos, deletion syncs across devices. Recently Deleted may still hold the space for 30 days.")
     ]
     var body: some View {
         VStack(spacing: 20) {

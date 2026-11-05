@@ -17,6 +17,8 @@ targets:
     info:
       path: Offload/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleIcons:
           CFBundlePrimaryIcon:
             CFBundleIconFiles: [AppIcon60]
@@ -25,6 +27,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.offload.app
+        MARKETING_VERSION: "1.1"
+        CURRENT_PROJECT_VERSION: "2"
         INFOPLIST_KEY_CFBundleDisplayName: Offload
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Review photos and copy all original resources to your selected external drive.
